@@ -1,100 +1,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-int Euclid(int a, int b)
-{
-	if (b == 0)
-		return a;
-	else
-		return Euclid(b, a%b);
-}
-
-int * Extended_Euclid(int a, int b)
-{
-	int out[3];
-	int *g;
-	if (b == 0)
-	{
-		out[0] = a;
-		out[1] = 1;
-		out[2] = 0;
-		return out;
-	}
-	else
-	{
-		g = Extended_Euclid(b, a%b);
-		out[0] = g[0];
-		out[1] = g[2];
-		out[2] = g[1] - g[2] * (a / b);
-		return out;
-	}
-}
-
-int mod_exp(int a, int b, int n)
-{
-	int c = 0;
-	int d = 1;
-	int k = (int)log2((double)b);
-	int i;
-	int * bit = (int*)malloc(sizeof(int)*(k + 1));
-
-	for (i = k; i >= 0; i--)
-	{
-		if (b % 2 == 1)
-			bit[i] = 1;
-		else
-			bit[i] = 0;
-		b = b / 2;
-	}
-	
-	for (i = 0; i <= k; i++)
-	{
-		c = 2 * c;
-		d = (d*d) % n;
-		if (bit[i] == 1)
-		{
-			c = c + 1;
-			d = (d*a) % n;
-		}
-	}
-
-	return d;
-}
-
-int primeDis(int n)
-{
-	int p;
-
-	for (p = 3; p < (int)sqrt(n); p += 2)
-	{
-		if (n%p == 0)
-			break;
-	}
-
-	return p;
-}
-
-int millarRabin(int n)
-{
-	int q = n - 1;
-	int k = 0;
-	
-	while(q%2 == 0)
-	{
-		k++;
-		q = q / 2;
-	}
-	
-	double rand = srand(time(0))
-}
-
-double RSAencryption(int n, int M)
-{#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
+/*
+ * When I create two large prime number for making n, m,
+ * It unvoked error. Because they are too large to compute with them.
+ * So, I guess that the bits of them is cutted by computer.
+ * Therefore, I limit the range of the two random prime numbers (P, Q.)
+ * So, it would be limited to entered messages' the number of digits.
+ * Maybe, to 3 digits is safe and from 4 digits would be a little dangerous 
+ */
+
+int Euclid(int a, int b);
+int * Extended_Euclid(int a, int b);
+int mod_exp(int a, int b, int n);
+int isPrime(int n);
+int RSAencryption(int M, int e, int n);
+int RSAdecryption(int C, int d, int n);
+void createRand(int * n, int * m);
+int publicKey(int m);
+int privateKey(int m, int e);
+
+void main()
+{
+	int n, m;	//prime numbers' multi, pi(n)
+	int d, e;	//private key, public key
+	int M, C;	//original message, encrpyted message
+
+	//create random number n, m
+	createRand(&n, &m);
+
+	//create public key with m
+	e = publicKey(m);
+	//create private key with m, e
+	d = privateKey(m, e);
+
+	//enter the original message
+	printf("enter the message : ");
+	scanf("%d", &M);
+
+	//encrypte the message
+	C = RSAencryption(M, e, n);
+
+	//decrypte message
+	M = RSAdecryption(C, d, n);
+
+	//print the original message
+	printf("%d \n", M);
+}
+
 int Euclid(int a, int b)
 {
 	if (b == 0)
@@ -128,10 +83,11 @@ int mod_exp(int a, int b, int n)
 {
 	int c = 0;
 	int d = 1;
-	int k = (int)(log((double)b)/log((double)2));
+	int k = (int)(log((double)b) / log((double)2));	//#bits of b
 	int i;
 	int * bit = (int*)malloc(sizeof(int)*(k + 1));
 
+	//change from b to 2's bits
 	for (i = k; i >= 0; i--)
 	{
 		if (b % 2 == 1)
@@ -140,7 +96,8 @@ int mod_exp(int a, int b, int n)
 			bit[i] = 0;
 		b = b / 2;
 	}
-	
+
+	//calculate a^b % n = d
 	for (i = 0; i <= k; i++)
 	{
 		c = 2 * c;
@@ -155,157 +112,87 @@ int mod_exp(int a, int b, int n)
 	return d;
 }
 
-int primeDis(int n)
+int isPrime(int n)
 {
-	int p;
-
-	for (p = 3; p < (int)sqrt((double)n); p += 2)
+	int i;
+	//if n is smaller than 2, that is not a prime number
+	if (n < 2)
 	{
-		if (n%p == 0)
-			break;
+		return 0;
 	}
-
-	return p;
-}
-
-int millarRabin(int n)
-{
-	int q = n - 1;
-	int k = 0;
-	int i, j;
-	int a, b;
-	int d;
-
-	while(q%2 == 0)
+	//when n is even number, it is false. Because n is a large prime number
+	if (n % 2 == 0)
 	{
-		k++;
-		q = q / 2;
+		return 0;
 	}
 	
-	srand(time(NULL));
-	for (i=0; i<log((double)n); i++)
+	//if n is not a prime number, it has a divider smaller than sqrt(n)
+	for (i = 3; i < (int)sqrt(n) + 1; i += 2)
 	{
-		a = (int)(rand()%(n-1));
-		
-		if(a < 2)
-			a = 2;
-
-		d = Euclid(a, n);
-		if(d != 1)
-		{
+		if (n%i == 0)
 			return 0;
-		}
-
-		b = mod_exp(a, q, n);
-
-		if(b == 1 || b == (n - 1))
-		{
-			continue;
-		}
-		else
-		{
-			for(j=0; j<k-1; j++)
-			{
-				b = (b * b)%n;
-				if(b == (n - 1))
-					break;
-			}
-
-			if(b != (n-1))
-			{
-				return 0;
-			}
-		}
 	}
+
 	return 1;
 }
 
-double RSAencryption(int M, int *n, int *e)
+int RSAencryption(int M, int e, int n)
 {
-	int E = 3, gcd;
 	int C;
-	int p, q;
-	int r;
-	int N;
-
-	srand(time(NULL));
-	r = (int)rand() + 2;
-	while(!millarRabin(r))
-		r = (int)rand() + 2;
-	p = r;
-	r = (int)rand() + 2;
-	while(!millarRabin(r) || p == r)
-		r = (int)rand() + 2;
-	q = r;
-
-	N = p*q;
-	*n = N;
-	
-	for(E = 3; Euclid((p-1)*(q-1), E) != 1; E+=2);
-
-	*e = E;
-	C = mod_exp(M, E, N);
+	//encrypte from M to C
+	C = mod_exp(M, e, n);
 
 	return C;
 }
 
-double RSAdecryption(int n, int e, int C)
+int RSAdecryption(int C, int d, int n)
 {
-	int d;
 	int M;
-	int p, q;
-	int * temp;
-
-	p = primeDis(n);
-	q = n / p;
-
-	temp = Extended_Euclid(e, (p-1)*(q-1));	//x'
-	d = temp[1];
-	if (temp[1] < 0)
-		d = temp[1] + (p-1)*(q-1);
-
+	//decrypte from C to M
 	M = mod_exp(C, d, n);
 
 	return M;
 }
 
-void main()
+void createRand(int * n, int * m)
 {
-	int M = 19, C;
-	int n, e;	//public key
+	int prime[2];	//P, Q
+	int r;
 
-	C = RSAencryption(M, &n, &e);
-	printf("N = %d \n", n);
-	M = RSAdecryption(n, e, C);
-	printf(" %d \n", M);
+	srand(time(NULL));
+
+	//create random numbers
+	for (int i = 0; i < 2; i++)
+	{
+		do {
+			r = (int)rand()%100;
+		} while (!isPrime(r));	// if it is not prime, just redo
+		prime[i] = r;
+	}
+
+	*n = prime[0]*prime[1];
+	*m = (prime[0] - 1)*(prime[1] - 1);
 }
 
+int publicKey(int m)
+{
+	int e;
+	//finding a small odd integer e relatively prime to m
+	for (e = 3; Euclid(m, e) != 1; e += 2);
 
+	return e;
 }
 
-double RSAdecryption(int n, int e, int C)
+int privateKey(int m, int e)
 {
 	int d;
-	int M;
-	int p, q;
 	int * temp;
-
-	p = primeDis(n);
-	q = n / p;
-
-	temp = Extended_Euclid(e, (p-1)*(q-1));	//x'
+	
+	//finding the d in de = 1 (mod m)
+	temp = Extended_Euclid(e, m);
 	d = temp[1];
-	if (temp[1] < 0)
-		d = temp[1] + (p-1)*(q-1);
+	if (d < 0)
+		d = d + m;
 
-	M = mod_exp(C, d, n);
-
-	return M;
-}
-
-void main()
-{
-	int M;
-	M = RSAdecryption(119, 5, 66);
-	printf(" %d \n", M);
+	return d;
 }
