@@ -2,78 +2,61 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "ListBaseStack.h"
-
 typedef struct _point
 {
 	double x;
 	double y;
 } Point;
 
-double GrahamScan(Point p[]);
-void MergeTwoArea(double arr[], int left, int mid, int right);
-void MergeSort(double arr[], int left, int right);
+
+Point GrahamScan(Point p[]);
+void InsertSort(Point arr[], int n);
+int outerProduct(Point p1, Point p2);
+int isCCW(int n);
+Point sub(Point p1, Point p2);
 
 void main()
 {
 
 }
 
-double GrahamScan(Point p[])
+int isCCW(int n)
 {
-	MergeSort(
+	if (n > 0)
+		return 1;
+	else 
+		return 0;
 }
 
-void MergeTwoArea(double arr[], int left, int mid, int right)
+Point GrahamScan(Point p[])
 {
-	int fIdx = left;
-	int rIdx = mid+1;
-	int i;
+	Point p0;
+	p0.x = 0;
+	p0.y = 0;
+	int n = sizeof(p)/sizeof(Point);
+	Point * po = (Point*)malloc(sizeof(Point)*n);
 
-	int * sortArr = (double*)malloc(sizeof(double)*(right+1));
-	int sIdx = left;
-
-	while(fIdx<=mid && rIdx<=right)
-	{
-		if(arr[fIdx] <= arr[rIdx])
-			sortArr[sIdx] = arr[fIdx++];
-		else
-			sortArr[sIdx] = arr[rIdx++];
-
-		sIdx++;
-	}
-
-	if(fIdx > mid)
-	{
-		for(i=rIdx; i<=right; i++, sIdx++)
-			sortArr[sIdx] = arr[i];
-	}
-	else
-	{
-		for(i=fIdx; i<=mid; i++, sIdx++)
-			sortArr[sIdx] = arr[i];
-	}
-
-	for(i=left; i<=right; i++)
-		arr[i] = sortArr[i];
+	InsertSort(p, n);
 	
-	free(sortArr);
+	po[0] = p[0];
+	po[1] = p[1];
+	po[2] = p[2];	
+
+	for(int i = 3, j = 3; i < n; i++)
+	{
+		while(!isCCW(outerProduct(sub(p[i-1], p[i-2]), sub(p[i], po[0]))))
+		{
+			
+		}
+		po[j] = p[i];
+	}
 }
 
-void MergeSort(double arr[], int left, int right)
+Point sub(Point p1, Point p2)
 {
-	int mid;
+	Point p;
+	p.x = p1.x - p2.x;
+	p.y = p1.y - p2.y;
 
-	if(left < right)
-	{
-		// 중간 지점을 계산한다.
-		mid = (left+right) / 2;
-
-		// 둘로 나눠서 각각을 정렬한다.
-		MergeSort(arr, left, mid);
-		MergeSort(arr, mid+1, right);
-
-		// 정렬된 두 배열을 병합한다.
-		MergeTwoArea(arr, left, mid, right);
-	}
+	return p;
 }
