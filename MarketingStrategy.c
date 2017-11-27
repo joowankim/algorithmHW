@@ -8,12 +8,12 @@ typedef struct _point
 	double y;
 } Point;
 
-double p2p(Point p1, Point p2);
-double closestPair(Point *p, int l, int r);
-void MergeTwoAreaX(Point arr[], int left, int mid, int right);
-void MergeTwoAreaY(Point arr[], int left, int mid, int right);
-void MergeSort(Point arr[], int left, int right, char a);
-void inputPoint(char * line, Point * p);
+double p2p(Point p1, Point p2);	// distance between p1 and p2
+double closestPair(Point *p, int l, int r);	// closest pair's distance
+void MergeTwoAreaX(Point arr[], int left, int mid, int right);	// merge sort by x value
+void MergeTwoAreaY(Point arr[], int left, int mid, int right);	// merge sort by y value
+void MergeSort(Point arr[], int left, int right, char a);	// merge sort
+void inputPoint(char * line, Point * p);	// read the information by text file
 
 void main()
 {
@@ -29,10 +29,11 @@ void main()
 		exit(1);
 	}
 
-	fgets(Line, 81, fp);
+	fgets(Line, 81, fp);	// read first line
 	n = atoi(Line);
 	p = (Point*)malloc(sizeof(Point)*n);
 
+	// read points' information
 	i=0;
 	while(fgets(Line, 81, fp))
 	{
@@ -41,9 +42,10 @@ void main()
 	}
 	fclose(fp);
 
+	// compute closest pair's distance
 	temp = closestPair(p, 0, n-1);
 
-	printf("%d \n", temp);
+	printf("%f \n", temp);
 }
 
 void inputPoint(char * line, Point * p)
@@ -52,12 +54,14 @@ void inputPoint(char * line, Point * p)
 	double t;
 	char temp[10];
 
+	// x value
 	for(i=0; line[i] != ' '; i++)
 		temp[i] = line[i];
 	temp[i] = '\0';
 	t = atof(temp);
 	(*p).x = t;
 
+	// y value
 	for(i = i+1, j=0; line[i] != '\n'; i++, j++)
 		temp[j] = line[i];
 	temp[j] = '\0';
@@ -68,13 +72,15 @@ void inputPoint(char * line, Point * p)
 double closestPair(Point *p, int l, int r)
 {
 	int i, j;
-	int q;
-	int c = 0;
-	double dl, dr;
-	double d, m;
+	int q;	// middle point's index
+	int c = 0;	// the number of points in d*d square from middle point
+	double dl, dr;	// minimum distance in left/right side
+	double d, m;	// minimun distance
 	Point * S = (Point*)malloc(sizeof(Point)*(r+1));
 
-	MergeSort(p, l, r, 'x');
+	MergeSort(p, l, r, 'x');	// sort by x value
+
+	// the number of points is less than 3
 	if(r - l < 3)
 	{
 		double min = p2p(p[l], p[l+1]);
@@ -92,12 +98,13 @@ double closestPair(Point *p, int l, int r)
 	q = (l+r)/2;
 	if((l+r)%2 != 0) q++;
 
-	dl = closestPair(p, l, q-1);
-	dr = closestPair(p, q, r);
+	dl = closestPair(p, l, q-1);	// left side minimum distance
+	dr = closestPair(p, q, r);		// right side minimum distance
 
 	if(dl > dr) d = dr;
 	else d = dl;
 
+	// points in d*d square from the middle point
 	for(i=l; i<=r; i++)
 	{
 		if(p[q].x - d <= p[i].x && p[i].x <= p[q].x + d)
@@ -107,8 +114,9 @@ double closestPair(Point *p, int l, int r)
 		}
 	}
 
-	MergeSort(S, 0, c - 1, 'y');
+	MergeSort(S, 0, c - 1, 'y');	// sort by y value
 
+	// compute distances between a point and each 7 points
 	for(i=0; i<c; i++)
 	{
 		for(j=i+1; j<i+8; j++)
@@ -206,14 +214,11 @@ void MergeSort(Point arr[], int left, int right, char a)
 
 	if(left < right)
 	{
-		// 중간 지점을 계산한다.
 		mid = (left+right) / 2;
 
-		// 둘로 나눠서 각각을 정렬한다.
 		MergeSort(arr, left, mid, a);
 		MergeSort(arr, mid+1, right, a);
 
-		// 정렬된 두 배열을 병합한다.
 		if(a=='x') MergeTwoAreaX(arr, left, mid, right);
 		else MergeTwoAreaY(arr, left, mid, right);
 	}
